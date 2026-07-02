@@ -11,11 +11,16 @@ def login():
 @auth_bp.route('/zerodha_login')
 def zerodha_login():
     from services import KiteService, TokenStore
-    from flask import current_app
+    from flask import current_app, request
     
     kite_service: IKiteService = current_app.config['kite_service']
     url = kite_service.get_login_url()
+    
+    # Log the callback URL for debugging
+    callback_url = f"{request.scheme}://{request.host}/auth/callback"
     print(f"Redirecting to Zerodha URL: {url}")
+    print(f"Expected callback URL: {callback_url}")
+    
     return redirect(url)
 
 @auth_bp.route('/callback')
