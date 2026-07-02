@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>F&O Orders</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+
+        input {
+            margin: 5px;
+            padding: 6px;
+        }
+
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+        }
+
+        .funds-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 15px;
+            width: 300px;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Place F&O Orders</h2>
+
+    <div id="orders">
+        <div>
+            <label>Option Type:</label>
+            <select id="optionType">
+                <option value="CE">Call (CE)</option>
+                <option value="PE">Put (PE)</option>
+            </select>
+            Symbol: <input type="text" class="symbol" id="symbol" placeholder="Select Symbol..." />
+            Type:
+            <select class="type">
+                <option>BUY</option>
+                <option>SELL</option>
+            </select>
+            Qty: <input type="number" class="qty" value="0" />
+        </div>
+    </div>
+
+    <button id="placeOrders">Place Order</button>
+    <button onclick="location.href='/auth/logout'">Logout</button>
+
+    <div class="funds-box">
+        <h3>Funds</h3>
+        <div>Available: ₹ <span id="available"></span></div>
+        <div>Utilised: ₹ <span id="utilised"></span></div>
+        <div>Net: ₹ <span id="net"></span></div>
+    </div>
+
+    <button onclick="loadFunds()">Refresh Funds</button>
+
+    <script>
+        $(document).ready(function () {
+            loadLatestSymbol("CE");
+        });
+
+        document.getElementById("optionType").addEventListener("change", function () {
+            updateSymbol();
+        });
+
+        function updateSymbol() {
+            const optionType = document.getElementById("optionType").value;
+            loadLatestSymbol(optionType);
+        }
+
+        $("#placeOrders").click(function () {
+            var orders = [];
+            $("#orders div").each(function () {
+                orders.push({
+                    trading_symbol: $(this).find(".symbol").val(),
+                    quantity: parseInt($(this).find(".qty").val()),
+                    transaction_type: $(this).find(".type").val()                    
+                });
+            });
+
+            $.ajax({
+                url: '/trade/place_orders',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(orders),
+                success: function (res) {
+                    alert("Orders placed: " + res['order_ids']);
+                }
+            });
+        });
+
+        function loadFunds() {
+            $.ajax({
+                url: '/trade/get_funds',
+                type: 'GET',
+                success: function (data) {
+                    $("#available").text(data.available_cash.toFixed(2));
+                    $("#utilised").text(data.utilised.toFixed(2));
+                    $("#net").text(data.net.toFixed(2));
+                },
+                error: function () {
+                    alert("Failed to load funds");
+                }
+            });
+        }
+
+        function loadLatestSymbol(optionType) {
+            $.ajax({
+                url: '/trade/get_latest_nifty_symbol?optionType='+optionType+'',
+                type: 'GET',
+                success: function (data) {
+                    $("#symbol").val(data.symbol);
+                    $(".qty").val(data.quantity);
+                },
+                error: function () {
+                    alert("Failed to load symbol");
+                }
+            });
+        }
+    </script>
+</body>
+</html>
