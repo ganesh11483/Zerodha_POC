@@ -1,6 +1,6 @@
 # Rise Trading - Python Version
 
-Automated options trading system for Zerodha Kite Connect API, converted from the original .NET implementation.
+Automated options trading system for Zerodha Kite Connect API.
 
 ## Features
 
